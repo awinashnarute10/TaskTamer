@@ -16,3 +16,15 @@ Note: This will impact Vite dev & build performances.
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## AI API configuration
+
+Create a `.env.local` file in the project root with:
+
+```
+VITE_AI_API_URL=YOUR_ENDPOINT
+# Optional if your API needs it:
+VITE_AI_API_KEY=YOUR_KEY
+```
+
+The app will POST `{ prompt, history }` to `VITE_AI_API_URL` and expects JSON with either a `text` field or a `messages` array containing an assistant message. Steps can optionally be returned under `steps` as an array of `{ id, text, done }`.
