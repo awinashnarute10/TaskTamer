@@ -5,11 +5,58 @@ function MessageItem({ type, text, steps, onToggleStep }) {
     ? "bg-blue-500 text-white ml-auto"
     : "bg-gray-100 text-gray-900 mr-auto";
 
+  function renderBoldInline(line) {
+    // Split by **...** segments (allow multiple words and spaces) and render <strong>
+    const parts = String(line).split(/(\*\*[\s\S]+?\*\*)/g);
+    return parts.map((part, idx) => {
+      const m = part.match(/^\*\*([\s\S]+)\*\*$/);
+      if (m) {
+        return <strong key={`b-${idx}`}>{m[1].trim()}</strong>;
+      }
+      return <span key={`t-${idx}`}>{part}</span>;
+    });
+  }
+
+  function renderFormattedText(t, enableHeadingToBullets = false) {
+    const lines = String(t).split(/\r?\n/);
+    const nodes = [];
+    let listItems = [];
+
+    const flushList = () => {
+      if (listItems.length > 0) {
+        nodes.push(
+          <ul key={`ul-${nodes.length}`} className="list-disc pl-5 my-1">
+            {listItems.map((content, idx) => (
+              <li key={`li-${idx}`}>{content}</li>
+            ))}
+          </ul>
+        );
+        listItems = [];
+      }
+    };
+
+    lines.forEach((line, i) => {
+      const m = enableHeadingToBullets && line.match(/^\s*#{3}\s+(.*)$/);
+      if (m) {
+        listItems.push(renderBoldInline(m[1]));
+      } else {
+        flushList();
+        nodes.push(<span key={`l-${i}`}>{renderBoldInline(line)}</span>);
+        if (i < lines.length - 1) nodes.push(<br key={`br-${i}`} />);
+      }
+    });
+
+    flushList();
+    return nodes;
+  }
+
   return (
     <div className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}>
       <div className={`${bubbleBase} ${bubbleColor}`}>
         <div className="text-xs opacity-70 mb-1">{isUser ? "You" : "AI"}</div>
-        <div className="whitespace-pre-wrap">{text}</div>
+        <div className="whitespace-pre-wrap">
+          {renderFormattedText(text, !isUser)}
+        </div>
         {Array.isArray(steps) && steps.length > 0 ? (
           <ul className="mt-2 space-y-1">
             {steps.map((s) => (
@@ -21,7 +68,7 @@ function MessageItem({ type, text, steps, onToggleStep }) {
                   className="mt-0.5"
                 />
                 <span className={s.done ? "line-through text-gray-500" : ""}>
-                  {s.text}
+                  {renderBoldInline(s.text)}
                 </span>
               </li>
             ))}
