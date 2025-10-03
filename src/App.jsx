@@ -20,6 +20,7 @@ function App() {
   const [taskCapturedByChat, setTaskCapturedByChat] = useState({});
   const [taskTextByChat, setTaskTextByChat] = useState({});
   const [selectedModel, setSelectedModel] = useState("gpt-oss-120b");
+  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
   const endRef = useRef(null);
 
   const currentChat = chats.find((c) => c.id === currentChatId);
@@ -28,6 +29,31 @@ function App() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  // Load chats from localStorage on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("tasktamer.chats");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setChats(parsed);
+          setCurrentChatId(parsed[0].id);
+        }
+      }
+    } catch {
+    } finally {
+      setHasLoadedFromStorage(true);
+    }
+  }, []);
+
+  // Persist chats to localStorage
+  useEffect(() => {
+    if (!hasLoadedFromStorage) return;
+    try {
+      localStorage.setItem("tasktamer.chats", JSON.stringify(chats));
+    } catch {}
+  }, [chats, hasLoadedFromStorage]);
 
   async function handleSend() {
     if (!input.trim() || isLoading) return;
@@ -324,6 +350,24 @@ function App() {
     setIsLoading(false);
   }
 
+  function handleDeleteChat(id) {
+    setChats((prev) => {
+      const filtered = prev.filter((c) => c.id !== id);
+      // adjust current chat if needed
+      if (id === currentChatId) {
+        const nextId = filtered[0]?.id ?? Date.now();
+        if (!filtered[0]) {
+          // ensure at least one chat exists
+          const emptyChat = { id: nextId, title: "Chat 1", messages: [] };
+          setCurrentChatId(nextId);
+          return [emptyChat];
+        }
+        setCurrentChatId(nextId);
+      }
+      return filtered;
+    });
+  }
+
   return (
     <div className="min-h-screen w-full flex">
       <Sidebar
@@ -331,6 +375,7 @@ function App() {
         currentChatId={currentChatId}
         onSelectChat={handleSelectChat}
         onNewChat={handleNewChat}
+        onDeleteChat={handleDeleteChat}
       />
       <div
         className="ml-auto flex flex-col gap-4 p-4  bg-neutral-900/40"
