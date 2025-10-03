@@ -15,7 +15,7 @@ function InputBox({ value, onChange, onSend, disabled }) {
           onKeyDown={handleKeyDown}
           placeholder="Describe your big task..."
           rows={1}
-          className="flex-1 rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-neutral-100 placeholder-neutral-500 outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+          className="flex-1 rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-neutral-100 placeholder-neutral-500 outline-none focus:ring-2 focus:ring-indigo-500 resize-none hover:ring-2 hover:ring-indigo-500"
         />
         <button
           type="button"

@@ -18,6 +18,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAwaitingBreakdown, setIsAwaitingBreakdown] = useState(false);
   const [taskCapturedByChat, setTaskCapturedByChat] = useState({});
+  const [taskTextByChat, setTaskTextByChat] = useState({});
   const endRef = useRef(null);
 
   const currentChat = chats.find((c) => c.id === currentChatId);
@@ -81,6 +82,7 @@ function App() {
       );
       setIsAwaitingBreakdown(true);
       setTaskCapturedByChat((prev) => ({ ...prev, [currentChatId]: true }));
+      setTaskTextByChat((prev) => ({ ...prev, [currentChatId]: trimmed }));
       return;
     }
 
@@ -110,6 +112,76 @@ function App() {
       setIsLoading(true);
       try {
         const ai = await sendMessageToAI({ prompt, history: messages });
+        const aiReply = {
+          id: Date.now() + 1,
+          type: "ai",
+          text: ai.text ?? "",
+          steps: ai.steps,
+        };
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.id === currentChatId
+              ? { ...chat, messages: [...chat.messages, aiReply] }
+              : chat
+          )
+        );
+      } catch (err) {
+        const errorReply = {
+          id: Date.now() + 1,
+          type: "ai",
+          text: `Failed to reach AI: ${err.message}`,
+        };
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.id === currentChatId
+              ? { ...chat, messages: [...chat.messages, errorReply] }
+              : chat
+          )
+        );
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // If we already created a breakdown in this chat, treat further input as refinement
+    const hasExistingChecklist = messages.some(
+      (m) => m.type === "ai" && Array.isArray(m.steps) && m.steps.length > 0
+    );
+    if (taskCaptured && hasExistingChecklist) {
+      const initialTask = (taskTextByChat[currentChatId] || "").trim();
+      const containsInitialTask = initialTask
+        ? trimmed.toLowerCase().includes(initialTask.toLowerCase())
+        : true;
+      // Detect if user is asking about a different/new task
+      const indicatesNewTask =
+        /(new|another|different)\s+task\b|^switch(\s+the)?\s+task\b/i.test(
+          trimmed
+        );
+      if (indicatesNewTask || !containsInitialTask) {
+        const pleaseNewChat = {
+          id: Date.now() + 1,
+          type: "ai",
+          text: "This looks like a different task. Please open a new chat for each distinct task.",
+        };
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.id === currentChatId
+              ? { ...chat, messages: [...chat.messages, pleaseNewChat] }
+              : chat
+          )
+        );
+        return;
+      }
+
+      // Otherwise, regenerate/refresh the checklist using the extra details
+      setIsLoading(true);
+      try {
+        const ai = await sendMessageToAI({
+          prompt:
+            "Update and regenerate the existing task breakdown with these additional details. Return subtasks with clear titles:",
+          history: messages.concat([{ type: "user", text: trimmed }]),
+        });
         const aiReply = {
           id: Date.now() + 1,
           type: "ai",
