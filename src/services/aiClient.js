@@ -70,13 +70,12 @@ function normalizeAIResponse(data) {
     // Normalize provided steps if present
     let steps = normalizeSteps(data.steps);
 
-    // If no structured steps were provided, try to parse checklist-like items from text
-    if ((!steps || steps.length === 0) && typeof text === "string") {
+    // Parse checklist-like items from text; if found, strip them from visible text
+    if (typeof text === "string") {
         const parsed = parseStepsFromText(text);
         if (parsed.steps.length > 0) {
-            steps = parsed.steps;
-            // Optionally keep original text; if you want to remove the list from the text,
-            // swap to: text = parsed.textWithoutList;
+            steps = steps && steps.length > 0 ? steps : parsed.steps;
+            text = parsed.textWithoutList; // avoid rendering duplicates
         }
     }
 
@@ -106,10 +105,33 @@ function parseStepsFromText(text) {
         /^\s*[-*]\s+\[( |x|X)\]\s+(.*)$/u,     // - [ ] task or - [x] task
         /^\s*[-*]\s+(.*)$/u,                      // - task
         /^\s*\d+[\.)]\s+(.*)$/u,                // 1. task or 1) task
+        /^\s*#{3}\s+(.*)$/u,                      // ### heading treated as a step
     ];
 
     for (const line of lines) {
         let matched = false;
+        // 0) Table row with checkbox symbol (e.g., | ... | ☐ | ... |)
+        const isTableRow = /^\s*\|(.+)\|\s*$/u.test(line);
+        if (isTableRow) {
+            const rawCells = line
+                .trim()
+                .split("|")
+                .map((c) => c.trim())
+                .filter((c) => c.length > 0);
+            if (rawCells.length > 0) {
+                const hasUnchecked = rawCells.some((c) => /^(☐|\[ \])$/u.test(c));
+                const hasChecked = rawCells.some((c) => /^(☑|\[[xX]\])$/u.test(c));
+                if (hasUnchecked || hasChecked) {
+                    matched = true;
+                    const textCells = rawCells.filter((c) => !/^(☐|☑|\[ \]|\[[xX]\])$/u.test(c) && !/^\d+$/.test(c));
+                    // Heuristic: choose the longest non-checkbox, non-index cell as the step text
+                    const text = (textCells.sort((a, b) => b.length - a.length)[0] || "").trim();
+                    if (text) {
+                        stepLines.push({ text, done: hasChecked });
+                    }
+                }
+            }
+        }
         // 1) Checkbox pattern first
         const m1 = line.match(/^\s*[-*]\s+\[( |x|X)\]\s+(.*)$/u);
         if (m1) {
@@ -132,6 +154,17 @@ function parseStepsFromText(text) {
             if (m3) {
                 matched = true;
                 stepLines.push({ text: m3[1].trim(), done: false });
+            }
+        }
+        if (!matched) {
+            // 4) ### heading as a step
+            const m4 = line.match(/^\s*#{3}\s+(.*)$/u);
+            if (m4) {
+                matched = true;
+                const headingText = m4[1].trim();
+                if (headingText.length > 0) {
+                    stepLines.push({ text: headingText, done: false });
+                }
             }
         }
         if (!matched) {
