@@ -8,10 +8,10 @@ function getEnv(name, { required = true } = {}) {
     return value;
 }
 
-export async function sendMessageToAI({ prompt, history = [] }) {
+export async function sendMessageToAI({ prompt, history = [], modelOverride }) {
     const apiUrl = getEnv("VITE_AI_API_URL");
     const apiKey = import.meta.env.VITE_AI_API_KEY;
-    const model = import.meta.env.VITE_AI_MODEL || "llama-4";
+    const model = modelOverride || import.meta.env.VITE_AI_MODEL || "gpt-oss-120b";
 
 
     const messages = [

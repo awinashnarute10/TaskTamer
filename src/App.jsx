@@ -19,6 +19,7 @@ function App() {
   const [isAwaitingBreakdown, setIsAwaitingBreakdown] = useState(false);
   const [taskCapturedByChat, setTaskCapturedByChat] = useState({});
   const [taskTextByChat, setTaskTextByChat] = useState({});
+  const [selectedModel, setSelectedModel] = useState("gpt-oss-120b");
   const endRef = useRef(null);
 
   const currentChat = chats.find((c) => c.id === currentChatId);
@@ -111,7 +112,11 @@ function App() {
         "Break this task into smaller subtasks with progress tracking.";
       setIsLoading(true);
       try {
-        const ai = await sendMessageToAI({ prompt, history: messages });
+        const ai = await sendMessageToAI({
+          prompt,
+          history: messages,
+          modelOverride: selectedModel,
+        });
         const aiReply = {
           id: Date.now() + 1,
           type: "ai",
@@ -181,6 +186,7 @@ function App() {
           prompt:
             "Update and regenerate the existing task breakdown with these additional details. Return subtasks with clear titles:",
           history: messages.concat([{ type: "user", text: trimmed }]),
+          modelOverride: selectedModel,
         });
         const aiReply = {
           id: Date.now() + 1,
@@ -220,6 +226,7 @@ function App() {
       const ai = await sendMessageToAI({
         prompt: userMessage.text,
         history: messages,
+        modelOverride: selectedModel,
       });
       const aiReply = {
         id: Date.now() + 1,
@@ -334,6 +341,8 @@ function App() {
             messages={messages}
             isLoading={isLoading}
             onToggleStep={toggleStep}
+            selectedModel={selectedModel}
+            onChangeModel={setSelectedModel}
             ref={endRef}
           />
         </div>
