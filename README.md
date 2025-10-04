@@ -39,6 +39,12 @@ VITE_AI_API_KEY=your_api_key_here
 VITE_AI_MODEL=gpt-oss-120b
 ```
 
+## 🧠 Tech Stack
+- React (Vite)  
+- TailwindCSS  
+- JavaScript  
+- LocalStorage (for persistent data)
+
 How requests look:
 - The app POSTs JSON containing `{ model, messages }` to `VITE_AI_API_URL`.
 - It accepts several response shapes; the safest is OpenAI-style `{ choices: [{ message: { content } }] }`.
