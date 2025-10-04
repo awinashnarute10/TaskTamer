@@ -39,16 +39,16 @@ VITE_AI_API_KEY=your_api_key_here
 VITE_AI_MODEL=gpt-oss-120b
 ```
 
+How requests look:
+- The app POSTs JSON containing `{ model, messages }` to `VITE_AI_API_URL`.
+- It accepts several response shapes; the safest is OpenAI-style `{ choices: [{ message: { content } }] }`.
+- If your model returns a plain checklist in text, TaskTamer will parse it into steps automatically.
+
 ## 🧠 Tech Stack
 - React (Vite)  
 - TailwindCSS  
 - JavaScript  
 - LocalStorage (for persistent data)
-
-How requests look:
-- The app POSTs JSON containing `{ model, messages }` to `VITE_AI_API_URL`.
-- It accepts several response shapes; the safest is OpenAI-style `{ choices: [{ message: { content } }] }`.
-- If your model returns a plain checklist in text, TaskTamer will parse it into steps automatically.
 
 ## Using TaskTamer
 1) Tell TaskTamer your big task in the chat.
@@ -100,4 +100,4 @@ Tips:
 Issues and PRs are welcome. If you have ADHD-friendly UX ideas (color cues, timers, or focus modes), please share them!
 
 ## License
-Add your chosen license here (MIT, Apache-2.0, etc.).
+This project is licensed under the MIT License – see the LICENSE file for full details..
