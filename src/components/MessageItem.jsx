@@ -18,7 +18,9 @@ function MessageItem({ type, text, steps, onToggleStep }) {
   }
 
   function renderFormattedText(t, enableHeadingToBullets = false) {
-    const lines = String(t).split(/\r?\n/);
+    const lines = String(t)
+      .split(/\r?\n/)
+      .filter((line) => line.trim() !== ""); // Remove empty lines
     const nodes = [];
     let listItems = [];
 
@@ -54,9 +56,7 @@ function MessageItem({ type, text, steps, onToggleStep }) {
     <div className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}>
       <div className={`${bubbleBase} ${bubbleColor}`}>
         <div className="text-xs opacity-70 mb-1">{isUser ? "You" : "AI"}</div>
-        <div className="whitespace-pre-wrap">
-          {renderFormattedText(text, !isUser)}
-        </div>
+        <div>{renderFormattedText(text, !isUser)}</div>
         {Array.isArray(steps) && steps.length > 0 ? (
           <ul className="mt-2 space-y-1">
             {steps.map((s) => (
@@ -88,7 +88,63 @@ function ProgressFooter({ steps }) {
   const total = steps.length;
   const completed = steps.filter((s) => s.done).length;
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const showMotivation = percent > 0 && percent < 100;
+
+  // Motivational messages arrays for different progress levels
+  const motivationalMessages = [
+    "Every journey begins with a single step! 🌟",
+    "You're off to a great start—keep it up! 🚀",
+    "One task down, more to go—you've got this! 💪",
+    "Small victories lead to big wins! 🎯",
+    "Progress is progress, no matter how small! ⚡",
+  ];
+
+  const encouragementMessages = [
+    "You're building momentum—don't stop now! 🔥",
+    "Halfway there! Keep pushing forward! 🌟",
+    "You're in the groove—let's finish strong! 💪",
+    "Great progress so far! Almost there! 🚀",
+    "You're crushing it—one more push! ⚡",
+  ];
+
+  const nearCompleteMessages = [
+    "Almost there! Just a few more steps! 🏁",
+    "Final stretch—you can see the finish line! 🌟",
+    "So close! Push through to the end! 💪",
+    "One last effort and you're done! 🚀",
+    "Final push—you've got this! 🎯",
+  ];
+
+  const congratulationsMessages = [
+    "🎉 Congratulations! You've completed all tasks! 🎉",
+    "🏆 Mission accomplished! Well done! 🏆",
+    "🌟 Incredible work! All tasks finished! 🌟",
+    "🎯 Perfect! You've achieved everything! 🎯",
+    "🚀 Outstanding! You nailed every task! 🚀",
+  ];
+
+  // Select message based on progress
+  const getMotivationalMessage = () => {
+    if (percent === 100) {
+      // Return congratulations message with celebration
+      return congratulationsMessages[
+        completed % congratulationsMessages.length
+      ];
+    } else if (percent >= 75) {
+      // Near completion
+      return nearCompleteMessages[completed % nearCompleteMessages.length];
+    } else if (percent >= 50) {
+      // More than halfway
+      return encouragementMessages[completed % encouragementMessages.length];
+    } else if (percent > 0) {
+      // Started but less than halfway
+      return motivationalMessages[completed % motivationalMessages.length];
+    }
+    return null;
+  };
+
+  const message = getMotivationalMessage();
+  const showMotivation = percent > 0;
+  const isComplete = percent === 100;
 
   return (
     <div className="mt-3">
@@ -97,13 +153,23 @@ function ProgressFooter({ steps }) {
       </div>
       <div className="h-2 w-full bg-black/10 rounded">
         <div
-          className="h-2 bg-green-500 rounded"
+          className={`h-2 rounded transition-all duration-500 ${
+            isComplete
+              ? "bg-gradient-to-r from-green-400 to-green-600"
+              : "bg-green-500"
+          }`}
           style={{ width: `${percent}%` }}
         />
       </div>
       {showMotivation ? (
-        <div className="mt-1 text-xs opacity-70">
-          Keep going—you're making great progress!
+        <div
+          className={`mt-1 text-xs ${
+            isComplete
+              ? "opacity-100 font-semibold text-green-600 animate-pulse"
+              : "opacity-70"
+          }`}
+        >
+          {message}
         </div>
       ) : null}
     </div>
