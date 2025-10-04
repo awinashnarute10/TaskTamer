@@ -3,7 +3,15 @@ import Header from "./Header.jsx";
 import { forwardRef } from "react";
 
 const ChatWindow = forwardRef(function ChatWindow(
-  { messages, isLoading, onToggleStep, selectedModel, onChangeModel },
+  {
+    messages,
+    isLoading,
+    onToggleStep,
+    selectedModel,
+    onChangeModel,
+    currentChatId,
+    chats,
+  },
   ref
 ) {
   const showPlaceholder = !messages || messages.length === 0;
@@ -24,16 +32,20 @@ const ChatWindow = forwardRef(function ChatWindow(
           </div>
         ) : (
           <ul className="text-left px-4 pt-4">
-            {messages.map((m) => (
-              <li key={m.id} className="mb-2">
-                <MessageItem
-                  type={m.type}
-                  text={m.text}
-                  steps={m.steps}
-                  onToggleStep={(stepId) => onToggleStep?.(m.id, stepId)}
-                />
-              </li>
-            ))}
+            {messages.map((m) => {
+              const currentChat = chats?.find((c) => c.id === currentChatId);
+              return (
+                <li key={m.id} className="mb-2">
+                  <MessageItem
+                    type={m.type}
+                    text={m.text}
+                    steps={m.steps}
+                    onToggleStep={(stepId) => onToggleStep?.(m.id, stepId)}
+                    taskTitle={currentChat?.title}
+                  />
+                </li>
+              );
+            })}
             {isLoading ? (
               <li className="mb-2">
                 <MessageItem type="ai" text="Thinking…" />

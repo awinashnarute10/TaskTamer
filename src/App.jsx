@@ -28,19 +28,21 @@ function App() {
 
   // Helper function to extract a meaningful task name from the user's description
   function extractTaskName(taskText) {
-    if (!taskText || typeof taskText !== 'string') return 'Task';
-    
+    if (!taskText || typeof taskText !== "string") return "Task";
+
     // Clean the text and take the first meaningful phrase
-    let cleaned = taskText.trim()
-      .replace(/^(i want to|i need to|help me|can you|could you)\s+/i, '') // Remove common prefixes
-      .replace(/\s+/g, ' ') // Normalize whitespace
+    let cleaned = taskText
+      .trim()
+      .replace(/^(i want to|i need to|help me|can you|could you)\s+/i, "") // Remove common prefixes
+      .replace(/\s+/g, " ") // Normalize whitespace
       .slice(0, 30); // Limit length
-    
+
     // If the cleaned text is too short or empty, return a generic name
-    if (cleaned.length < 4) return 'Task';
-    
+    if (cleaned.length < 4) return "Task";
+
     // Capitalize first letter
-    return cleaned.charAt(0).toLowerCase() === cleaned.charAt(0) && cleaned.length > 1 
+    return cleaned.charAt(0).toLowerCase() === cleaned.charAt(0) &&
+      cleaned.length > 1
       ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
       : cleaned;
   }
@@ -153,18 +155,16 @@ function App() {
 
       // Proceed with breakdown
       setIsAwaitingBreakdown(false);
-      
+
       // Update chat title to match the task
-      const taskText = taskTextByChat[currentChatId] || '';
+      const taskText = taskTextByChat[currentChatId] || "";
       const taskName = extractTaskName(taskText);
       setChats((prev) =>
         prev.map((chat) =>
-          chat.id === currentChatId
-            ? { ...chat, title: taskName }
-            : chat
+          chat.id === currentChatId ? { ...chat, title: taskName } : chat
         )
       );
-      
+
       const prompt =
         "Break this task into smaller subtasks with progress tracking.";
       setIsLoading(true);
@@ -419,6 +419,8 @@ function App() {
             onToggleStep={toggleStep}
             selectedModel={selectedModel}
             onChangeModel={setSelectedModel}
+            currentChatId={currentChatId}
+            chats={chats}
             ref={endRef}
           />
         </div>

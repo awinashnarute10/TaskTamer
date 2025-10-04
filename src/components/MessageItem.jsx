@@ -1,4 +1,6 @@
-function MessageItem({ type, text, steps, onToggleStep }) {
+import { useState, useEffect } from "react";
+
+function MessageItem({ type, text, steps, onToggleStep, taskTitle }) {
   const isUser = type === "user";
   const bubbleBase = "max-w-[80%] rounded-lg p-3";
   const bubbleColor = isUser
@@ -56,7 +58,9 @@ function MessageItem({ type, text, steps, onToggleStep }) {
     <div className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}>
       <div className={`${bubbleBase} ${bubbleColor}`}>
         <div className="text-xs opacity-70 mb-1">{isUser ? "You" : "AI"}</div>
-        <div>{renderFormattedText(text, !isUser)}</div>
+        {!Array.isArray(steps) || steps.length === 0 ? (
+          <div>{renderFormattedText(text, !isUser)}</div>
+        ) : null}
         {Array.isArray(steps) && steps.length > 0 ? (
           <ul className="mt-2 space-y-1">
             {steps.map((s) => (
@@ -75,7 +79,7 @@ function MessageItem({ type, text, steps, onToggleStep }) {
           </ul>
         ) : null}
         {Array.isArray(steps) && steps.length > 0 ? (
-          <ProgressFooter steps={steps} />
+          <ProgressFooter steps={steps} taskTitle={taskTitle} />
         ) : null}
       </div>
     </div>
@@ -84,67 +88,71 @@ function MessageItem({ type, text, steps, onToggleStep }) {
 
 export default MessageItem;
 
-function ProgressFooter({ steps }) {
+function ProgressFooter({ steps, taskTitle }) {
+  const [motivationalMessage, setMotivationalMessage] = useState("");
+  const [isGeneratingMotivation, setIsGeneratingMotivation] = useState(false);
+  const [previousMotivations, setPreviousMotivations] = useState([]);
+  const [lastGeneratingMilestone, setLastGeneratingMilestone] = useState(0);
+
   const total = steps.length;
   const completed = steps.filter((s) => s.done).length;
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  // Motivational messages arrays for different progress levels
-  const motivationalMessages = [
-    "Every journey begins with a single step! 🌟",
-    "You're off to a great start—keep it up! 🚀",
-    "One task down, more to go—you've got this! 💪",
-    "Small victories lead to big wins! 🎯",
-    "Progress is progress, no matter how small! ⚡",
-  ];
-
-  const encouragementMessages = [
-    "You're building momentum—don't stop now! 🔥",
-    "Halfway there! Keep pushing forward! 🌟",
-    "You're in the groove—let's finish strong! 💪",
-    "Great progress so far! Almost there! 🚀",
-    "You're crushing it—one more push! ⚡",
-  ];
-
-  const nearCompleteMessages = [
-    "Almost there! Just a few more steps! 🏁",
-    "Final stretch—you can see the finish line! 🌟",
-    "So close! Push through to the end! 💪",
-    "One last effort and you're done! 🚀",
-    "Final push—you've got this! 🎯",
-  ];
-
-  const congratulationsMessages = [
-    "🎉 Congratulations! You've completed all tasks! 🎉",
-    "🏆 Mission accomplished! Well done! 🏆",
-    "🌟 Incredible work! All tasks finished! 🌟",
-    "🎯 Perfect! You've achieved everything! 🎯",
-    "🚀 Outstanding! You nailed every task! 🚀",
-  ];
-
-  // Select message based on progress
-  const getMotivationalMessage = () => {
-    if (percent === 100) {
-      // Return congratulations message with celebration
-      return congratulationsMessages[
-        completed % congratulationsMessages.length
-      ];
-    } else if (percent >= 75) {
-      // Near completion
-      return nearCompleteMessages[completed % nearCompleteMessages.length];
-    } else if (percent >= 50) {
-      // More than halfway
-      return encouragementMessages[completed % encouragementMessages.length];
-    } else if (percent > 0) {
-      // Started but less than halfway
-      return motivationalMessages[completed % motivationalMessages.length];
-    }
-    return null;
-  };
-
-  const message = getMotivationalMessage();
   const showMotivation = percent > 0;
   const isComplete = percent === 100;
+
+  // Generate AI motivation at each new 5% milestone only
+  useEffect(() => {
+    if (!showMotivation || !taskTitle) return;
+
+    // Determine current 5% milestone crossed (e.g., 5, 10, 15, ...)
+    const currentMilestone = Math.floor(percent / 5) * 5;
+
+    // Only trigger when we reach a NEW milestone and milestones start at 5%
+    if (currentMilestone >= 5 && currentMilestone > lastGeneratingMilestone) {
+      // Optimistically record the milestone to avoid duplicate triggers on re-renders
+      setLastGeneratingMilestone(currentMilestone);
+
+      const generateMotivation = async () => {
+        setIsGeneratingMotivation(true);
+        try {
+          const { generateMotivation: getAI } = await import(
+            "../services/aiClient.js"
+          );
+          const message = await getAI({
+            taskDescription: taskTitle,
+            completedTasks: completed,
+            totalTasks: total,
+            progressPercent: percent,
+          });
+          setMotivationalMessage(message);
+        } catch (error) {
+          console.warn("Failed to generate motivation:", error);
+          // Fallback messages
+          const fallbacks = {
+          100: "🏆 Flawless finish. Champion.",
+          75: "🏁 Almost there! Push through!",
+          50: "🔥 Great momentum! Keep it up!",
+          25: "🌟 Great start! Keep going!",
+          5: "✨ You’re rolling!",
+          };
+          // Pick the closest lower-or-equal fallback milestone
+          const available = Object.keys(fallbacks)
+            .map((k) => parseInt(k))
+            .filter((k) => percent >= k)
+            .sort((a, b) => b - a);
+          const chosen = available[0];
+          setMotivationalMessage(
+            (chosen && fallbacks[chosen]) || "💪 Keep pushing forward! 💪"
+          );
+        } finally {
+          setIsGeneratingMotivation(false);
+        }
+      };
+
+      generateMotivation();
+    }
+  }, [completed, total, percent, taskTitle, showMotivation, lastGeneratingMilestone]);
 
   return (
     <div className="mt-3">
@@ -169,7 +177,9 @@ function ProgressFooter({ steps }) {
               : "opacity-70"
           }`}
         >
-          {message}
+          {isGeneratingMotivation
+            ? "✨ Generating motivation..."
+            : motivationalMessage}
         </div>
       ) : null}
     </div>
