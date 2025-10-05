@@ -65,8 +65,7 @@ function App() {
           setCurrentChatId(parsed[0].id);
         }
       }
-    } catch {
-    } finally {
+    } catch { /* empty */ } finally {
       setHasLoadedFromStorage(true);
     }
   }, []);
@@ -76,7 +75,7 @@ function App() {
     if (!hasLoadedFromStorage) return;
     try {
       localStorage.setItem("tasktamer.chats", JSON.stringify(chats));
-    } catch {}
+    } catch { /* empty */ }
   }, [chats, hasLoadedFromStorage]);
 
   async function handleSend() {
