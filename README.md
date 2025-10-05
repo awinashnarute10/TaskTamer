@@ -20,6 +20,7 @@ An ADHD-friendly task tamer that turns one overwhelming goal into a clean, check
 
 ## Quick start
 
+### Option 1: Local Development
 Requirements:
 - Node.js 18+ (or newer)
 
@@ -31,6 +32,18 @@ Install and run:
 - Preview build: `npm run preview`
 
 If you need to expose on your LAN, run dev with host enabled: `vite --host` (or configure in `vite.config.js`).
+
+### Option 2: Docker Deployment
+
+Build the Docker image:
+- docker build -t tasktamer-frontend .
+
+
+Run the container:
+- docker run -p 5173:80 tasktamer-frontend
+
+Open http://localhost:5173
+ to see the app running inside Docker.
 
 ## Configure your AI endpoint
 Create a file named `.env.local` in the project root:
@@ -53,6 +66,7 @@ How requests look:
 - TailwindCSS  
 - JavaScript  
 - LocalStorage (for persistent data)
+- Deployment: Docker + Nginx for static hosting
 
 ## Using TaskTamer
 1) Tell TaskTamer your big task in the chat.
