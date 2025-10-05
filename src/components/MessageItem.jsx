@@ -112,6 +112,7 @@ export default MessageItem;
 function ProgressFooter({ steps, taskTitle, pomodoro, messageId }) {
   const [motivationalMessage, setMotivationalMessage] = useState("");
   const [isGeneratingMotivation, setIsGeneratingMotivation] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [previousMotivations, setPreviousMotivations] = useState([]);
   const [lastGeneratingMilestone, setLastGeneratingMilestone] = useState(0);
 
