@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import PomodoroButton from "./PomodoroButton.jsx";
+import PomodoroSettingsModal from "./PomodoroSettingsModal.jsx";
 
-function MessageItem({ type, text, steps, onToggleStep, taskTitle }) {
+function MessageItem({ type, text, steps, onToggleStep, taskTitle, messageId, pomodoro }) {
   const isUser = type === "user";
+  const [showPomodoroSettings, setShowPomodoroSettings] = useState(false);
   const bubbleBase = "max-w-[80%] rounded-lg p-3";
   const bubbleColor = isUser
     ? "bg-blue-500 text-white ml-auto"
@@ -79,16 +82,34 @@ function MessageItem({ type, text, steps, onToggleStep, taskTitle }) {
           </ul>
         ) : null}
         {Array.isArray(steps) && steps.length > 0 ? (
-          <ProgressFooter steps={steps} taskTitle={taskTitle} />
+          <ProgressFooter steps={steps} taskTitle={taskTitle} pomodoro={pomodoro} messageId={messageId} />
         ) : null}
+        
+        {/* Add Pomodoro button only to AI messages with steps/checkboxes */}
+        {!isUser && pomodoro && Array.isArray(steps) && steps.length > 0 && (
+          <PomodoroButton 
+            messageId={messageId}
+            pomodoro={pomodoro}
+            onShowSettings={() => setShowPomodoroSettings(true)}
+          />
+        )}
       </div>
+      
+      {/* Pomodoro Settings Modal */}
+      {showPomodoroSettings && (
+        <PomodoroSettingsModal 
+          isOpen={showPomodoroSettings}
+          onClose={() => setShowPomodoroSettings(false)}
+          pomodoro={pomodoro}
+        />
+      )}
     </div>
   );
 }
 
 export default MessageItem;
 
-function ProgressFooter({ steps, taskTitle }) {
+function ProgressFooter({ steps, taskTitle, pomodoro, messageId }) {
   const [motivationalMessage, setMotivationalMessage] = useState("");
   const [isGeneratingMotivation, setIsGeneratingMotivation] = useState(false);
   const [previousMotivations, setPreviousMotivations] = useState([]);
@@ -100,6 +121,13 @@ function ProgressFooter({ steps, taskTitle }) {
 
   const showMotivation = percent > 0;
   const isComplete = percent === 100;
+
+  // Stop Pomodoro when progress reaches 100%
+  useEffect(() => {
+    if (isComplete && pomodoro && pomodoro.isTimerForMessage(messageId)) {
+      pomodoro.stopTimer();
+    }
+  }, [isComplete, pomodoro, messageId]);
 
   // Generate AI motivation at each new 5% milestone only
   useEffect(() => {

@@ -1,17 +1,21 @@
 # TaskTamer
 
-An ADHD-friendly task tamer that turns one overwhelming goal into a clean, checkbox-only checklist — with tiny dopamine boosts at every 5% you complete and a boastful victory line at 100%.
+An ADHD-friendly task tamer that turns one overwhelming goal into a clean, checkbox-only checklist — with tiny dopamine boosts at every 5% you complete, integrated Pomodoro timer, and a boastful victory line at 100%.
 
 - One task per chat, broken into actionable steps with checkboxes only (no extra AI text).
+- **🍅 Built-in Pomodoro Timer** with customizable duration and focus mode.
 - Progress bar with motivation pings at each new 5% milestone (5, 10, 15, …, 100).
 - Final 100% message is proudly celebratory.
+- **Chat switching prevention** during active Pomodoro sessions to maintain focus.
 - Duplicate steps are automatically removed and messy labels are cleaned.
 - Local-first by default (chats saved in your browser). You bring your own AI endpoint.
 
 ## Why it helps ADHD brains
 - Reduces overwhelm by showing only the next tiny action.
+- **🍅 Pomodoro integration** helps maintain focus with time-boxed work sessions.
 - Frequent small wins: motivation nudges at each +5% keep momentum.
 - Visual progress makes finishing feel rewarding.
+- **Focus mode enforcement**: prevents chat switching during active Pomodoro sessions.
 - Clear boundaries: one task per chat to prevent context switching.
 
 ## Quick start
@@ -53,20 +57,32 @@ How requests look:
 ## Using TaskTamer
 1) Tell TaskTamer your big task in the chat.
 2) Reply `1` when prompted to generate a checklist with checkboxes.
-3) Check items off as you complete them.
+3) **🍅 Start a Pomodoro session** by clicking the checkbox next to the tomato icon.
+4) Check items off as you complete them during your focused work session.
 
-What you’ll see:
+What you'll see:
 - AI replies render as checkboxes only (no duplicate or messy lines).
+- **🍅 Pomodoro button** appears on every task checklist for focused work sessions.
 - Progress bar updates as you toggle checkboxes.
+- **Auto-stop timer** when you complete all tasks (100% progress).
 - Motivation message appears whenever you reach a new 5% milestone.
-- At 100%, you’ll get a bold, brag-worthy victory line.
+- At 100%, you'll get a bold, brag-worthy victory line.
 
 Tips:
-- Keep each step tiny (1–5 minutes). If it feels heavy, split it.
-- Start with a 2-minute “starter” step (e.g., “Open the project”).
+- Keep each step tiny (15–30 minutes max). Perfect for Pomodoro sessions.
+- Start with a 2-minute "starter" step (e.g., "Open the project").
+- **🍅 Use Pomodoro sessions** to maintain focus and prevent burnout.
+- **Customize timer duration** (click the gear icon): 15, 25, 30, 45, or 60 minutes.
 - Use a new chat for a different task to stay focused.
+- **Complete tasks to auto-stop** the Pomodoro timer.
 
 ## Feature details
+- **🍅 Pomodoro Timer**: Built-in focus timer with customizable durations (15-60 minutes).
+- **Focus Mode**: Prevents chat switching and new chat creation during active sessions.
+- **Smart Auto-Stop**: Timer automatically stops when you complete all tasks (100% progress).
+- **Visual Indicators**: Timer countdown, disabled UI elements, and warning messages during sessions.
+- **Browser Notifications**: Get notified when your Pomodoro session completes.
+- **Persistent Settings**: Timer duration preferences saved in localStorage.
 - Checkbox-only AI output: The app parses lists (bulleted, numbered, or markdown checkboxes) and shows just the steps.
 - Deduplication and sanitization: Duplicate items are removed; labels are cleaned of symbols/HTML.
 - 5% milestone motivation: Messages are fetched at each new 5% progress threshold; responses are cached to avoid spam.
@@ -79,8 +95,15 @@ Tips:
 - Nothing happens / AI blank:
   - Check `.env.local` is set with a valid `VITE_AI_API_URL` (and key if needed).
   - Check your browser devtools console for CORS errors.
+- **🍅 Pomodoro not working**:
+  - Ensure browser notifications are enabled for completion alerts.
+  - Timer settings are saved in localStorage; clear browser data if issues persist.
+  - Only one Pomodoro can run at a time across all chats.
+- **Can't switch chats during Pomodoro**:
+  - This is intentional! Complete or stop your current session first.
+  - Look for the warning message and 🍅 indicators in the sidebar.
 - Motivation not appearing:
-  - Ensure at least one step exists and you’ve crossed a new 5% boundary (it won’t repeat within the same milestone).
+  - Ensure at least one step exists and you've crossed a new 5% boundary (it won't repeat within the same milestone).
 - Duplicate or weird checkbox labels:
   - The parser sanitizes and deduplicates automatically; if you still see issues, share an example line.
 - Port in use / dev server issues:
@@ -92,8 +115,11 @@ Tips:
 - Keep your API key in `.env.local` and do not commit it.
 
 ## Project structure (high level)
-- `src/App.jsx` — chat logic and flow
-- `src/components/MessageItem.jsx` — message bubble, checkboxes, and progress bar
+- `src/App.jsx` — chat logic, flow, and Pomodoro integration
+- `src/components/MessageItem.jsx` — message bubble, checkboxes, progress bar, and Pomodoro button
+- `src/components/PomodoroButton.jsx` — Pomodoro timer controls and display
+- `src/components/PomodoroSettingsModal.jsx` — duration customization modal
+- `src/hooks/usePomodoro.js` — Pomodoro state management and timer logic
 - `src/services/aiClient.js` — AI calls, response normalization, motivation generator
 
 ## Contributing

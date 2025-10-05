@@ -11,6 +11,7 @@ const ChatWindow = forwardRef(function ChatWindow(
     onChangeModel,
     currentChatId,
     chats,
+    pomodoro,
   },
   ref
 ) {
@@ -42,6 +43,8 @@ const ChatWindow = forwardRef(function ChatWindow(
                     steps={m.steps}
                     onToggleStep={(stepId) => onToggleStep?.(m.id, stepId)}
                     taskTitle={currentChat?.title}
+                    messageId={m.id}
+                    pomodoro={pomodoro}
                   />
                 </li>
               );
